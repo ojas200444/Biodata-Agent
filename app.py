@@ -6,8 +6,7 @@ import requests
 import base64
 import time
 
-# --- 1. CONFIGURATION (ST.SECRETS FOR CLOUD) ---
-# This pulls from the "Secrets" vault in your Streamlit Dashboard
+# --- 1. CONFIGURATION ---
 SHEET_ID = st.secrets["SHEET_ID"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 SCRIPT_URL = st.secrets["SCRIPT_URL"]
@@ -15,7 +14,7 @@ DRIVE_FOLDER_ID = st.secrets["DRIVE_FOLDER_ID"]
 
 # Setup Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 # Setup Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -23,42 +22,35 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", sco
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).sheet1
 
-# --- 2. MOBILE-FIRST UI DESIGN ---
+# --- 2. THE UI & MOBILE OPTIMIZATION ---
 st.set_page_config(page_title="Biodata Agent", page_icon="💍", layout="centered")
 
 # Custom CSS for Mobile Optimization
 st.markdown("""
-    <style>
-    /* Adjust padding for mobile screens */
+<style>
     .main .block-container {
         padding-top: 2rem;
         padding-right: 1rem;
         padding-left: 1rem;
     }
-    /* Style buttons to be finger-friendly (larger touch targets) */
     .stButton > button {
         width: 100%;
         border-radius: 12px;
         height: 3.5em;
         font-weight: bold;
     }
-    /* Optimize link buttons for mobile */
-    div[data-testid="stVerticalBlock"] > div:has(div.stLinkButton) {
-        gap: 0.5rem;
-    }
-    /* Make Title responsive */
     @media (max-width: 480px) {
         h1 {
             font-size: 1.5rem !important;
             text-align: center;
         }
     }
-    </style>
-    """, unsafe_allow_code=True)
+</style>
+""", unsafe_allow_code=True)
 
 st.title("💍 Biodata Agent")
 
-# Navigation Buttons (Stacked on mobile, side-by-side on tablet/PC)
+# Navigation Buttons
 col1, col2 = st.columns(2, gap="small")
 with col1:
     sheet_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
@@ -92,7 +84,7 @@ if uploaded_file:
             
             name = extracted_list[0]
 
-            # B. UPLOAD TO DRIVE (Using your Apps Script)
+            # B. UPLOAD TO DRIVE
             encoded_string = base64.b64encode(file_bytes).decode('utf-8')
             payload = {"base64": encoded_string, "mimeType": uploaded_file.type, "fileName": f"{name}_Bio"}
             drive_response = requests.post(SCRIPT_URL, json=payload)
