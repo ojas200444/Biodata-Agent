@@ -7,6 +7,7 @@ import base64
 import time
 
 # --- 1. CONFIGURATION ---
+# Pulling from Streamlit Secrets
 SHEET_ID = st.secrets["SHEET_ID"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 SCRIPT_URL = st.secrets["SCRIPT_URL"]
@@ -22,36 +23,13 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", sco
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).sheet1
 
-# --- 2. THE UI & MOBILE OPTIMIZATION ---
+# --- 2. THE UI ---
 st.set_page_config(page_title="Biodata Agent", page_icon="💍", layout="centered")
-
-# Custom CSS for Mobile Optimization
-st.markdown("""
-<style>
-    .main .block-container {
-        padding-top: 2rem;
-        padding-right: 1rem;
-        padding-left: 1rem;
-    }
-    .stButton > button {
-        width: 100%;
-        border-radius: 12px;
-        height: 3.5em;
-        font-weight: bold;
-    }
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 1.5rem !important;
-            text-align: center;
-        }
-    }
-</style>
-""", unsafe_allow_code=True)
 
 st.title("💍 Biodata Agent")
 
-# Navigation Buttons
-col1, col2 = st.columns(2, gap="small")
+# Navigation Buttons - These are natively responsive
+col1, col2 = st.columns(2)
 with col1:
     sheet_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
     st.link_button("📊 View Sheet", sheet_url, use_container_width=True)
