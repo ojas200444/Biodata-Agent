@@ -6,11 +6,12 @@ import requests
 import base64
 import time
 
-# --- 1. CONFIGURATION ---
-SHEET_ID = "1nUAV3pz38oaztATwLHIv0cYb5xHOvo5xrY9N2PHq5Rw"
-GEMINI_API_KEY = "AIzaSyAaMLayWCGGxOuztzdjh6FX14muXY6H2uw"
-SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzS1FYtwLNSDQEkgcLVud3-w9X1uYOrt22WZpKgMRCCXeJQ6uvY8EIrh0nw1bDeCgvc/exec"
-DRIVE_FOLDER_ID = "1XD9v-Wyv_c5RrcQ3m0OmY76GcbONZ2H2"
+# --- 1. CONFIGURATION (ST.SECRETS FOR CLOUD) ---
+# This pulls from the "Secrets" vault in your Streamlit Dashboard
+SHEET_ID = st.secrets["SHEET_ID"]
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+SCRIPT_URL = st.secrets["SCRIPT_URL"]
+DRIVE_FOLDER_ID = st.secrets["DRIVE_FOLDER_ID"]
 
 # Setup Gemini
 genai.configure(api_key=GEMINI_API_KEY)
@@ -22,23 +23,53 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", sco
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).sheet1
 
-# --- 2. THE UI ---
-st.set_page_config(page_title="Biodata Agent", page_icon="💍")
+# --- 2. MOBILE-FIRST UI DESIGN ---
+st.set_page_config(page_title="Biodata Agent", page_icon="💍", layout="centered")
+
+# Custom CSS for Mobile Optimization
+st.markdown("""
+    <style>
+    /* Adjust padding for mobile screens */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+    /* Style buttons to be finger-friendly (larger touch targets) */
+    .stButton > button {
+        width: 100%;
+        border-radius: 12px;
+        height: 3.5em;
+        font-weight: bold;
+    }
+    /* Optimize link buttons for mobile */
+    div[data-testid="stVerticalBlock"] > div:has(div.stLinkButton) {
+        gap: 0.5rem;
+    }
+    /* Make Title responsive */
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 1.5rem !important;
+            text-align: center;
+        }
+    }
+    </style>
+    """, unsafe_allow_code=True)
+
 st.title("💍 Biodata Agent")
 
-# --- NEW: NAVIGATION BUTTONS ---
-col1, col2 = st.columns(2)
+# Navigation Buttons (Stacked on mobile, side-by-side on tablet/PC)
+col1, col2 = st.columns(2, gap="small")
 with col1:
-    # This button opens your Google Sheet
     sheet_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit"
     st.link_button("📊 View Sheet", sheet_url, use_container_width=True)
 with col2:
-    # This button opens your Drive Folder
     drive_url = f"https://drive.google.com/drive/u/0/folders/{DRIVE_FOLDER_ID}"
-    st.link_button("📁 View Uploads Folder", drive_url, use_container_width=True)
+    st.link_button("📁 View Drive", drive_url, use_container_width=True)
 
 st.markdown("---")
 
+# --- 3. UPLOADER LOGIC ---
 uploaded_file = st.file_uploader("Upload Biodata (PDF or Image)", type=['pdf', 'jpg', 'png', 'jpeg'])
 
 if uploaded_file:
@@ -70,14 +101,14 @@ if uploaded_file:
             # C. SAVE TO SHEET
             sheet.append_row(extracted_list[:18] + [drive_link])
             
-            st.success(f"✅ Success! {name} has been added to the tracker.")
+            st.success(f"✅ Success! {name} has been added.")
             st.balloons()
 
         except Exception as e:
             if "429" in str(e):
-                st.error("Gemini is busy. Please wait 45 seconds and try again.")
+                st.error("Gemini is busy. Please wait 45 seconds.")
             else:
                 st.error(f"Error: {e}")
 
 st.markdown("---")
-st.caption("Tip: Your daily limit (RPD) resets every day at 12:30 PM IST.")
+st.caption("Tip: Daily limit resets at 12:30 PM IST.")
