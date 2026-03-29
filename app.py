@@ -15,7 +15,7 @@ DRIVE_FOLDER_ID = st.secrets["DRIVE_FOLDER_ID"]
 
 # Setup Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.0-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # Setup Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
