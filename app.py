@@ -19,7 +19,18 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 
 # Setup Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+
+
+
+# NEW — reads from Streamlit Secrets
+import json
+from oauth2client.service_account import ServiceAccountCredentials
+
+creds_dict = dict(st.secrets["gcp_service_account"])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+
+
+
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).sheet1
 
