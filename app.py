@@ -30,7 +30,6 @@ creds_dict = dict(st.secrets["gcp_service_account"])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 
 
-
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).sheet1
 
