@@ -70,7 +70,7 @@ if uploaded_file:
             extracted_list = [item.strip() for item in raw_text.split("|")]
             while len(extracted_list) < 18: extracted_list.append("-")
             
-                        name = extracted_list[0]
+            name = extracted_list[0]
             dob = extracted_list[1]
 
             # B. CHECK FOR DUPLICATES
