@@ -70,19 +70,34 @@ if uploaded_file:
             extracted_list = [item.strip() for item in raw_text.split("|")]
             while len(extracted_list) < 18: extracted_list.append("-")
             
-            name = extracted_list[0]
+                        name = extracted_list[0]
+            dob = extracted_list[1]
 
-            # B. UPLOAD TO DRIVE
-            encoded_string = base64.b64encode(file_bytes).decode('utf-8')
-            payload = {"base64": encoded_string, "mimeType": uploaded_file.type, "fileName": f"{name}_Bio"}
-            drive_response = requests.post(SCRIPT_URL, json=payload)
-            drive_link = drive_response.text
+            # B. CHECK FOR DUPLICATES
+            all_records = sheet.get_all_values()
+            is_duplicate = False
+            for row in all_records:
+                if len(row) >= 2:
+                    existing_name = row[0].strip().lower()
+                    existing_dob = row[1].strip().lower()
+                    if existing_name == name.strip().lower() and existing_dob == dob.strip().lower():
+                        is_duplicate = True
+                        break
 
-            # C. SAVE TO SHEET
-            sheet.append_row(extracted_list[:18] + [drive_link])
-            
-            st.success(f"✅ Success! {name} has been added.")
-            st.balloons()
+            if is_duplicate:
+                st.warning(f"⚠️ Duplicate detected: {name} (DOB: {dob}) is already in the sheet. Skipping upload.")
+            else:
+                # C. UPLOAD TO DRIVE
+                encoded_string = base64.b64encode(file_bytes).decode('utf-8')
+                payload = {"base64": encoded_string, "mimeType": uploaded_file.type, "fileName": f"{name}_Bio"}
+                drive_response = requests.post(SCRIPT_URL, json=payload)
+                drive_link = drive_response.text
+
+                # D. SAVE TO SHEET
+                sheet.append_row(extracted_list[:18] + [drive_link])
+                
+                st.success(f"✅ Success! {name} has been added.")
+                st.balloons()
 
         except Exception as e:
             if "429" in str(e):
